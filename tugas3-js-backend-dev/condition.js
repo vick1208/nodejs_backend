@@ -1,6 +1,6 @@
-
-let number = 9;
-let day = 7;
+const prompt = require('prompt-sync') ();
+let number = prompt('What is the number?');
+let day = 4;
 
 if (number % 2 === 0) {
     console.log(`Number ${number} is even`);
