@@ -12,9 +12,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.send("Hello There User");
-});
+
 app.get('/hello', (req, res) => {
     res.send({
         "message": "Success fetch message",
