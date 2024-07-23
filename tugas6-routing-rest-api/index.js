@@ -71,11 +71,11 @@ app.get('/api/products', (req, res) => {
     }
 });
 
-app.get('/api/products/:id', (req, res) => {
-    const categoryId = parseInt(req.params.id);
+app.get('/api/products/:name', (req, res) => {
+    const categoryName = req.params.name;
     const productName = req.query.name;
 
-    const categoryName = categories.find(cat => cat.id === categoryId).name
+    const category = categories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
 
     const productFoundCategory = products.find(p => p.category === categoryName);
 
