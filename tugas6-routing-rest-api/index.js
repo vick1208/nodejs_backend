@@ -6,7 +6,36 @@ app.use(express.json());
 
 let categories = [
     { id: 1, name: "Elektronik" },
-    { id: 2, name: "Perabotan" }
+    { id: 2, name: "Perabotan" },
+    { id: 3, name: "Pakaian" }
+];
+
+let products = [
+    {
+        id: 1,
+        name: 'Laptop',
+        category: 'Elektronik'
+    },
+    {
+        id: 2,
+        name: 'Meja',
+        category: 'Perabotan'
+    },
+    {
+        id: 3,
+        name: 'Kursi',
+        category: 'Perabotan'
+    },
+    {
+        id: 4,
+        name: 'Rak Sepatu',
+        category: 'Perabotan'
+    },
+    {
+        id: 5,
+        name: 'Gaun Putih',
+        category: 'Pakaian'
+    }
 ];
 
 app.get('/api/categories', (req, res) => {
@@ -25,70 +54,61 @@ app.get('/api/categories/:id', (req, res) => {
 
 app.post('/api/categories', (req, res) => {
     const newCategory = req.body;
-    newCategory.id = categories.length ? categories[categories.length - 1].id + 1 : 1;
-    categories.push(newCategory);
-    res.status(201).json(newCategory);
+    const newCategoryId = categories.length ? categories[categories.length - 1].id + 1 : 1;
+    const category = {
+        id: newCategoryId,
+        name: newCategory.name
+    };
+    categories.push(category);
+    res.status(201).json(category);
 });
 
 app.put('/api/categories/:id', (req, res) => {
     const categoryId = parseInt(req.params.id);
+    const updateCategory = req.body;
     const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
-    if (categoryIndex !== -1) {
-        categories[categoryIndex] = { id: categoryId, ...req.body };
-        res.json(categories[categoryIndex]);
-    } else {
-        res.status(404).json({ message: "Category not found" });
+    if (categoryIndex === -1) {
+        return res.status(404).json({ message: "Category not found" });
     }
+    categories[categoryIndex].name = updateCategory.name;
+    res.status(200).json(categories[categoryIndex]);
 });
 
 app.delete('/api/categories/:id', (req, res) => {
     const categoryId = parseInt(req.params.id);
+    const category = categories.filter(cat => cat.id === categoryId);
+    if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+    }
     categories = categories.filter(cat => cat.id !== categoryId);
-    res.status(204).send();
+    res.status(200).json(category);
 });
 
 
-let products = [
-    {
-        id: 1,
-        name: 'Laptop',
-        category: 'Elektronik'
-    },
-    {
-        id: 2,
-        name: 'Meja',
-        category: 'Perabotan'
-    },
-];
 
-app.get('/api/products', (req, res) => {
+
+app.get('/api/products/search', (req, res) => {
     const productName = req.query.name;
-    const productFound = products.find(p => p.name.toLowerCase() === productName.toLowerCase());
-    if (productFound) {
-        res.json(productFound);
-    } else {
-        res.status(404).json({ message: "Product not found" });
-    }
+    const productFound = products.filter((product) =>
+        product.name.toLowerCase().includes(productName.toLowerCase())
+    );
+    res.json(productFound);
 });
 
-app.get('/api/products/:name', (req, res) => {
-    const categoryName = req.params.name;
-    const productName = req.query.name;
+app.get('/api/products/:category/product', (req, res) => {
+    const category = req.params.category.toLowerCase();
+    const productName = req.query.name ? req.query.name.toLowerCase() : '';
 
-    const category = categories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
+    const filterProduct = products.filter((product) => {
+        product.category.toLowerCase() === category &&
+            product.name.toLowerCase().includes(productName);
+    });
 
-    const productFoundCategory = products.find(p => p.category === categoryName);
-
-    // const productFoundByName = products.find(p => p.name.toLowerCase() === productName.toLowerCase());
-
-    if (productName) {
-        res.json({
-            name: productName,
-            "product by Category ID": productFoundCategory
-        });
-    } else{
-        res.json(productFoundCategory);
+    if (filterProduct.length === 0) {
+        return res.status(404).json({ message: "Product Not Found" });
     }
+
+    res.json(filterProduct);
 
 });
 
