@@ -19,7 +19,6 @@ router.post('/categories',categoriesController.create);
 router.get('/categories/:id',categoriesController.findOne);
 router.put('/categories/:id',categoriesController.update);
 router.delete('/categories/:id',categoriesController.delete);
-router.get('/categories/:id/products',categoriesController.findProductByCategory);
 
 router.post("/upload", uploadMiddleware.single, uploadController.single);
 router.post("/uploads", uploadMiddleware.multiple, uploadController.multiple);
