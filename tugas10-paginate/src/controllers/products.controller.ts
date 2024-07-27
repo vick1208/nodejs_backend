@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import ProductsModel from "@/models/products.model";
 import * as Yup from 'yup';
+import CategoriesModel from "@/models/categories.model";
 
 const createValidationSchema = Yup.object().shape({
   name: Yup.string().required(),
@@ -20,10 +21,47 @@ export default {
   async create(req: Request, res: Response) {
     try {
 
+      const product = await ProductsModel.findOne({
+        name: req.body.name,
+      });
+
+      if (product) {
+        return res.status(400).json({
+          detail: `product with name ${req.body.name} already existed`,
+          message: "Failed create product",
+        });
+      }
+
+      const {category} = req.body;
+
+      if (category) {
+        const categoryFound = await CategoriesModel.findById(category);
+        if (!categoryFound) {
+          return res.status(404).json({
+            detail: "Category not found with the given category id",
+            message: "Failed create product",
+          });
+        }
+      } else {
+        return res.status(404).json({
+          detail: "Category id field cannot be empty",
+          message: "Failed create product",
+        });
+
+      }
+
       await createValidationSchema.validate(req.body);
-      const result = await ProductsModel.create(req.body);
+
+      const newProduct = await ProductsModel.create(req.body);
+
+      await CategoriesModel.findByIdAndUpdate(
+        category,
+        {$push: {products: newProduct._id}},
+        {new:true, useFindAndModify:false},
+      );
+
       res.status(201).json({
-        data: result,
+        data: newProduct,
         message: "Success create product",
       });
     } catch (error) {
@@ -35,6 +73,7 @@ export default {
         return;
       }
       const err = error as Error;
+      
       res.status(500).json({
         data: err.message,
         message: "Failed create product",
