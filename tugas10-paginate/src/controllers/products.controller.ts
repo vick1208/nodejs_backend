@@ -123,11 +123,20 @@ export default {
   },
   async findOne(req: Request, res: Response) {
     try {
-      const result = await ProductsModel.findOne({
+      const product = await ProductsModel.findOne({
         _id: req.params.id,
       }).populate('category');
+
+
+      if (!product) {
+        return res.status(404).json({
+          detail: "Product not found with the given id",
+          message: "Failed get one product",
+        });
+      }
+
       res.status(200).json({
-        data: result,
+        data: product,
         message: "Success get one product",
       });
     } catch (error) {
@@ -140,7 +149,32 @@ export default {
   },
   async update(req: Request, res: Response) {
     try {
-      const result = await ProductsModel.findOneAndUpdate(
+
+      const existingProduct = await ProductsModel.findOne({
+        _id: { $ne: req.params.id },
+        name: req.body.name,
+      });
+
+      if (existingProduct) {
+        return res.status(404).json({
+          detail: `Product with name ${req.body.name} already exist`,
+          message: "Failed update product"
+        });
+      }
+
+      const { category } = req.body;
+
+      if (category) {
+        const categoryFound = await CategoriesModel.findById(category);
+        if (!categoryFound) {
+          return res.status(404).json({
+            detail: "Category not found with the given category id",
+            message: "Failed create product"
+          });
+        }
+      }
+      
+      const product = await ProductsModel.findOneAndUpdate(
         { _id: req.params.id },
         req.body,
         {
@@ -148,8 +182,24 @@ export default {
         }
       );
 
+      if (!product) {
+        return res.status(404).json({
+          detail: "Product not found with the given id",
+          message: "Failed update product"
+        });
+      } else {
+        const categoryFound = await CategoriesModel.findById(category);
+        if (categoryFound) {
+          const productExist = categoryFound.products.includes(product._id);
+          if (!productExist) {
+            categoryFound.products.push(product._id);
+            await categoryFound.save();
+          }
+        }
+      }
+
       res.status(200).json({
-        data: result,
+        data: product,
         message: "Success update product",
       });
     } catch (error) {
@@ -162,12 +212,25 @@ export default {
   },
   async delete(req: Request, res: Response) {
     try {
-      const result = await ProductsModel.findOneAndDelete({
+      const product = await ProductsModel.findOneAndDelete({
         _id: req.params.id,
       });
 
+      if (!product) {
+        return res.status(404).json({
+          detail: "Product not found with the given id",
+          message: "Failed delete product",
+        });
+      }
+
+
+      await CategoriesModel.updateOne(
+        { _id: product.category },
+        { $pull: { products: product._id } }
+      );
+
       res.status(200).json({
-        data: result,
+        data: product,
         message: "Success delete product",
       });
     } catch (error) {
