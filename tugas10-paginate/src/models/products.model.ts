@@ -39,13 +39,13 @@ const ProductsSchema = new Schema(
   }
 );
 
-ProductsSchema.pre("save",function(next){
+ProductsSchema.pre("save", function (next) {
   const product = this;
 
   if (!product.slug) {
     product.slug = product.name.toLowerCase().split(" ").join("-");
-    next();
   }
+  next();
 });
 
 const ProductsModel = mongoose.model("Products", ProductsSchema);
