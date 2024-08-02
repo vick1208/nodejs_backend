@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 
 import jwt from "jsonwebtoken";
 
-import UserModel from "@/models/user.model";
+import UserModel from "@/models/users.model";
 import { IReqUser } from "@/utils/interfaces";
 import { decrypt } from "@/utils/encryption";
 import { SECRET } from "@/utils/env";
@@ -103,7 +103,7 @@ export default {
             }
 
             const token = jwt.sign(
-                { id: userByEmail._id, role: userByEmail.role },
+                { id: userByEmail._id, roles: userByEmail.roles },
                 SECRET,
                 {
                     expiresIn: "6h",
