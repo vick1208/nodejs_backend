@@ -24,11 +24,12 @@ const UserSchema = new Schema(
             type: String,
             required: true,
         },
-        roles: {
-            type: String,
-            enum: ["admin", "user"],
-            default: "user",
-        },
+        roles: [
+            {
+                type:String,
+                default: "user",
+            }
+        ],
         profilePicture: {
             type: String,
             default: "default.jpg",
